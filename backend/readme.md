@@ -199,7 +199,6 @@ Send a JSON object with the following structure:
 
 ---
 
-
 ### Example Request
 
 ```bash
@@ -211,39 +210,95 @@ curl -X POST http://localhost:4000/user/login \
 }'
 ```
 
+---
 
-### Example Express Route Code
 
-```js
-// backend/routes/userRouter.js
-router.post('/login', [
-  body('email').isEmail().withMessage('Please enter a valid email address'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-], userController.loginUser);
-```
+---
 
-### Example Controller Code
+## Endpoint: `GET /user/profile`
 
-```js
-// backend/controllers/userController.js
-module.exports.loginUser = async (req, res, next) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+---
+
+### Description
+
+This endpoint returns the authenticated user's profile information. The request must include a valid JWT token in the cookie or Authorization header.
+
+---
+
+### Request
+
+- **Headers:**
+    - `Authorization: Bearer <jwt_token>` (if not using cookies)
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+    ```json
+    {
+      "_id": "<user_id>",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "john.doe@example.com"
     }
-    const { email, password } = req.body;
-    const user = await userModel.findOne({email}).select('+password');
-    if (!user) {
-        return res.status(401).json({ message: 'invalid email or password' });
+    ```
+
+#### Unauthorized
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+    ```json
+    {
+      "message": "No token provided, authorization denied"
     }
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+    ```
+
+---
+
+## Endpoint: `GET /user/logout`
+
+---
+
+### Description
+
+This endpoint logs out the authenticated user by clearing the authentication cookie and blacklisting the JWT token for 24 hours. The request must include a valid JWT token in the cookie or Authorization header.
+
+---
+
+### Request
+
+- **Headers:**
+    - `Authorization: Bearer <jwt_token>` (if not using cookies)
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+    ```json
+    {
+      "message": "User logged out successfully"
     }
-    const token = user.generateAuthToken();
-    res.status(200).json({ token, user });
-}
-```
+    ```
+
+#### Unauthorized
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+    ```json
+    {
+      "message": "No token provided, authorization denied"
+    }
+    ```
 
 ---
 
