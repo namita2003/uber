@@ -305,6 +305,113 @@ This endpoint logs out the authenticated user by clearing the authentication coo
 
 ---
 
+
+## Endpoint: `POST /captains/login`
+
+---
+
+### Description
+
+This endpoint allows an existing captain to log in using their email and password. If the credentials are valid, a JWT token and captain details are returned.
+
+---
+
+### Request Body
+
+Send a JSON object with the following structure:
+
+```json
+{
+  "email": "jane.smith@example.com",
+  "password": "yourpassword"
+}
+```
+
+#### Field Requirements
+
+- `email` (string, required): Must be a valid email address.
+- `password` (string, required): Minimum 6 characters.
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+    ```json
+    {
+      "token": "<jwt_token>",
+      "captain": {
+        "_id": "<captain_id>",
+        "fullname": {
+          "firstname": "Jane",
+          "lastname": "Smith"
+        },
+        "email": "jane.smith@example.com",
+        "vehicle": {
+          "color": "Red",
+          "plateNumber": "ABC1234",
+          "capacity": 4,
+          "vehicleType": "car"
+        }
+      }
+    }
+    ```
+
+#### Validation Error
+
+- **Status Code:** `400 Bad Request`
+- **Body:**
+    ```json
+    {
+      "errors": [
+        {
+          "msg": "Please provide a valid email address",
+          "param": "email",
+          "location": "body"
+        },
+        {
+          "msg": "Password must be at least 6 characters long",
+          "param": "password",
+          "location": "body"
+        }
+      ]
+    }
+    ```
+
+#### Invalid Credentials
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+    ```json
+    {
+      "message": "invalid email or password"
+    }
+    ```
+    or
+    ```json
+    {
+      "message": "Invalid credentials"
+    }
+    ```
+
+---
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:4000/captains/login \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "jane.smith@example.com",
+  "password": "yourpassword"
+}'
+```
+
+---
+
 ## Endpoint: `POST /captains/register`
 
 ---
@@ -455,6 +562,102 @@ curl -X POST http://localhost:4000/captains/register \
   }
 }'
 ```
+
+---
+
+
+---
+
+## Endpoint: `GET /captains/profile`
+
+---
+
+### Description
+
+This endpoint returns the authenticated captain's profile information. The request must include a valid JWT token in the cookie or Authorization header.
+
+---
+
+### Request
+
+- **Headers:**
+    - `Authorization: Bearer <jwt_token>` (if not using cookies)
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+    ```json
+    {
+      "_id": "<captain_id>",
+      "fullname": {
+        "firstname": "Jane",
+        "lastname": "Smith"
+      },
+      "email": "jane.smith@example.com",
+      "vehicle": {
+        "color": "Red",
+        "plateNumber": "ABC1234",
+        "capacity": 4,
+        "vehicleType": "car"
+      }
+    }
+    ```
+
+#### Unauthorized
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+    ```json
+    {
+      "message": "No token provided, authorization denied"
+    }
+    ```
+
+---
+
+## Endpoint: `GET /captains/logout`
+
+---
+
+### Description
+
+This endpoint logs out the authenticated captain by clearing the authentication cookie and blacklisting the JWT token for 24 hours. The request must include a valid JWT token in the cookie or Authorization header.
+
+---
+
+### Request
+
+- **Headers:**
+    - `Authorization: Bearer <jwt_token>` (if not using cookies)
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+    ```json
+    {
+      "message": "Captain logged out successfully"
+    }
+    ```
+
+#### Unauthorized
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+    ```json
+    {
+      "message": "No token provided, authorization denied"
+    }
+    ```
 
 ---
 
