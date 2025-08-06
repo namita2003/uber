@@ -1,20 +1,29 @@
 'use client'
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { UserDataContext } from '/src/context/UserContext.jsx';
+import axios from 'axios';
 
 const UserLogin = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [userData, setUserData] = useState({})
 
+  const navigate = useNavigate();
+  const { user, setUser } = React.useContext(UserDataContext);
   const submitHandler = async (e) => {
     e.preventDefault();
-    console.log(email, password);
-    setUserData({
+    const oldUser = {
       email: email,
       password: password
-    })
-    console.log(userData);
+    }
+    const response = await axios.post(`http://localhost:4000/users/login`, oldUser)
+    if (response.status === 200) {
+      const data = response.data;
+      setUser(data.user)
+      localStorage.setItem('token', data.token);
+      navigate('/home');
+    }
     
     setEmail('');
     setPassword('');
