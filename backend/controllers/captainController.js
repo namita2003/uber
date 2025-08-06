@@ -29,7 +29,7 @@ module.exports.registerCaptain = async (req, res, next) => {
             vehicleType: vehicle.vehicleType
         });
         const token = captain.generateAuthToken();
-        res.status(201).json({ message: 'Captain registered successfully', captain });
+        res.status(201).json({ message: 'Captain registered successfully', captain, token });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
