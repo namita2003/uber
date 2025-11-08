@@ -2,38 +2,69 @@ const captainModel = require('../models/captainModel');
 const captainService = require('../services/captainService');
 const { validationResult } = require('express-validator');
 const blacklistTokenModel = require('../models/blacklistTokenModel');
-
+const mapsService = require('../services/mapsService');
 module.exports.registerCaptain = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    const { fullname, email, password, vehicle } = req.body;
+
+    const { fullname, email, password, vehicle, homeAddress } = req.body;
+
+    if (!homeAddress) {
+        return res.status(400).json({ message: "Registration requires a homeAddress for initial location." });
+    }
 
     const isCaptainExists = await captainModel.findOne({ email });
     if (isCaptainExists) {
         return res.status(400).json({ message: 'Captain with this email already exists' });
     }
-    const hashedPassword = await captainModel.hashPassword(password);
-    // Ensure the password is hashed before passing it to the service
-    // This assumes that the captainModel has a method to hash passwords
+
     try {
+        const hashedPassword = await captainModel.hashPassword(password);
+
+        // 🧭 1️⃣ Convert address → coordinates
+        const { lat, lng } = await mapsService.getAddressCoordinate(homeAddress);
+        console.log(`📍 Captain home address resolved to: ${lat}, ${lng}`);
+
+        // 🧩 2️⃣ Create captain using service, passing location correctly
         const captain = await captainService.createCaptain({
-            firstnane: fullname.firstname,
+
+            firstname: fullname.firstname,
             lastname: fullname.lastname,
             email,
             password: hashedPassword,
-            color: vehicle.color,
-            plateNumber: vehicle.plateNumber,
-            capacity: vehicle.capacity,
-            vehicleType: vehicle.vehicleType
+            vehicle,
+            location: {
+                type: 'Point',
+                coordinates: [lng, lat], // longitude first!
+                updatedAt: new Date()
+            },
+            status: 'active'
         });
+
+        if (!captain) {
+            return res.status(500).json({ message: 'Failed to create captain. Service returned null.' });
+        }
+
+        // 🪪 3️⃣ Generate token
         const token = captain.generateAuthToken();
-        res.status(201).json({ message: 'Captain registered successfully', captain, token });
+
+        res.status(201).json({
+            message: 'Captain registered successfully',
+            captain,
+            token
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("❌ Captain registration failed:", error);
+        const errorMessage = error.message.includes("No results found")
+            ? "Could not find coordinates for the provided address. Please try a different address."
+            : error.message || "An unknown error occurred during registration.";
+
+        res.status(500).json({ message: errorMessage });
     }
-}
+};
 
 module.exports.loginCaptain = async (req, res, next) => {
     const errors = validationResult(req);
@@ -50,7 +81,7 @@ module.exports.loginCaptain = async (req, res, next) => {
         return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = captain.generateAuthToken();
-    
+
     res.cookie('token', token);
     res.status(200).json({ token, captain });
 }

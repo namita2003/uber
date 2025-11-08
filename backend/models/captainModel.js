@@ -27,8 +27,7 @@ const captainSchema = new mongoose.Schema({
             type: String,
             required: true,
             unique: true,
-            minlength: [3, 'Plate number must contain at least 3 letters'],
-            //match: [/^[A-Z0-9-]+$/, 'Please fill a valid plate number']
+            minlength: [3, 'Plate number must contain at least 3 letters']
         },
         capacity: {
             type: Number,
@@ -38,18 +37,34 @@ const captainSchema = new mongoose.Schema({
         vehicleType: {
             type: String,
             required: true,
-            enum: ['car', 'bike', 'auto'],
+            enum: ['car', 'bike', 'auto']
+        }
+    },
+
+    // 🧭 Top-level location
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point',
+            required: true
         },
-        location: {
-            latitude: {
-                type: Number,
-            },
-            longitude: {
-                type: Number,
-            }
+        coordinates: {
+            type: [Number], 
+            default: [0, 0] ,// [longitude, latitude]
+            required: true
+
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
         }
     }
+
+
 })
+captainSchema.index({ location: "2dsphere" });
+
 
 captainSchema.methods.generateAuthToken = function () {
     const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });

@@ -1,6 +1,6 @@
-import React, {useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react';
 import { UserDataContext } from '/src/context/UserContext.jsx';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const UserProtectedWrapper = ({ children }) => {
@@ -8,37 +8,39 @@ const UserProtectedWrapper = ({ children }) => {
     const navigate = useNavigate();
     const { user, setUser } = useContext(UserDataContext);
     const [isLoading, setIsLoading] = useState(true);
-    React.useEffect(() => {
+
+    useEffect(() => {
         if (!token) {
             navigate('/login');
+            return;
         }
-    }, [token, navigate]);
 
-    axios.get(`http://localhost:4000/users/profile`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }).then(response => {
-        if (response.status === 200) {
-            const data = response.data;
-            setUser(data.user);
-            setIsLoading(false);
-        }
-    }).catch(error => {
-        console.error("Error fetching user profile:", error);
-        //setIsLoading(false);
-        localStorage.removeItem('token');
-        navigate('/login');
-    });
+        const fetchProfile = async () => {
+            try {
+                const response = await axios.get(`http://localhost:4000/users/profile`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (response.status === 200) {
+                    setUser(response.data);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                localStorage.removeItem('token');
+                navigate('/login');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, [token, navigate, setUser]); // ✅ only runs once unless token/navigate changes
+
     if (isLoading) {
-        return <div>Loading...</div>; // You can replace this with a loading spinner or any other loading indicator
+        return <div>Loading...</div>;
     }
 
-    return (
-        <>
-            {children}
-        </>
-    )
-}
+    return <>{children}</>;
+};
 
-export default UserProtectedWrapper
+export default UserProtectedWrapper;

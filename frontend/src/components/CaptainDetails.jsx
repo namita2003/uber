@@ -1,15 +1,21 @@
 import React from 'react'
+import { useContext } from 'react'
+import { CaptainDataContext } from '../context/CaptainContext.jsx';
 
 const CaptainDetails = () => {
+    const { captain } = useContext(CaptainDataContext);
+    //console.log("Captain in Details:", captain);
+    console.log("🧩 CaptainDetails rendered");
+
     return (
         <div>
             <div className='flex items-center justify-between'>
                 <div className='flex items-center justify-start gap-3'>
                     <img className='h-10 w-10 rounded-full object-cover' src="http://techbriefly.com/wp-content/uploads/2023/02/What-is-generative-AI-Tools-images-and-more-examples-2.webp" alt="" />
-                    <h4 className='text-lg font-medium'>Harsh Patel</h4>
+                    <h4 className='text-lg font-medium capitalize'>{captain?.fullname?.firstname} {captain?.fullname?.lastname}</h4>
                 </div>
                 <div>
-                    <h4 className='text-xl font-semibold'>₹295.20</h4>
+                    <h4 className='text-xl font-semibold'>Rs 295.20</h4>
                     <p className='text-sm text-gray-600'>Earned</p>
                 </div>
             </div>

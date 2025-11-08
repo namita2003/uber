@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CaptainDataContext } from '../context/captainContext'
+import { CaptainDataContext } from '../context/CaptainContext'
 import axios from 'axios'
 
 const CaptainLogin = () => {
@@ -21,7 +21,9 @@ const submitHandler = async (e) => {
         if (response.status === 200) {
             const data = response.data;
             setCaptain(data.captain);
-            localStorage.setItem('token', data.token);
+            console.log("✅ Response:", response.data);
+            localStorage.setItem('captaintoken', data.token);
+            console.log("🧭 Navigating to captainHome...");
             navigate('/captainHome');
         }
     } catch (error) {

@@ -32,3 +32,14 @@ module.exports.getDistanceTime = async (req, res) => {
         res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
+
+
+module.exports.getAutoCompleteSuggestions = async (req, res) => {
+    const { input } = req.query;
+    try {
+        const suggestions = await mapsService.getAutoCompleteSuggestions(input);
+        res.json(suggestions);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
